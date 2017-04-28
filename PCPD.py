@@ -96,18 +96,9 @@ else:
 print("Most similar: " + bestLink)
 linkScores = sorted(linkScores, key=linkScores.get, reverse=True)
 print("___Top sites___")
-print("#1 " + linkScores[0])
-print("#2 " + linkScores[1])
-print("#3 " + linkScores[2])
-# text3 = urllib.request.urlopen("https://en.wikipedia.org/wiki/Coding").read()
-# text = """
-# example slightly different stuff here
-# """
-#
-# text2 = """
-# example slightly different text stuff here
-# """
-# d = difflib.Differ()
-# diff = d.compare(text, text2)
-
-# text3 = soup.get_text()
+try:
+    print("#1 " + linkScores[0])
+    print("#2 " + linkScores[1])
+    print("#3 " + linkScores[2])
+except IndexError:
+    pass
