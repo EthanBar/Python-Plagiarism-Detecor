@@ -15,56 +15,62 @@ def gettext(filename):
 def split(toSplit, num):
     return [toSplit[start:start + num] for start in range(0, len(toSplit), num)]
 
+fileCompared = "toread.txt"
+
 queryNum = 0
 bestMatch = 0
 bestLink = ""
 linkScores = {}
-textData = ""
-fileCompared = "toread.txt"
 
-with open(fileCompared) as f:
-    for line in f:
-        textData += line
+textData = gettext(fileCompared)
+toRead = textData
+toRead = ' '.join(toRead.split())
+
+# Remove extra whitepsace and newlines
 textData = textData.replace('\\n', '')
 textData = ' '.join(textData.split())
+# Split data, as google only accepts querys of 32 words or less
+textData = split(textData, 250)
 
-textData = split(textData, 150)
-print(textData)
-print(len(textData))
 
-text = gettext(fileCompared)
-text = ' '.join(text.split())
-
+# Loop through each query
 for line in textData:
     queryNum += 1
     print("")
+
     deltaTime = time.time()
     print("Searching for query number " + str(queryNum))
     urls = []
+    # This is where we search google for the urls
     for url in search('"' + line + '"', stop=3, num=3):
         urls.append(url)
-        time.sleep(1)
-    print("Search completed in " + str(round(time.time() - deltaTime, 2)) + " seconds, beginning comparison")
-    deltaTime = time.time()
+        time.sleep(1)  # Avoid google detecting our bot
     if len(urls) == 0:
         print("No results found")
         continue
+    print("Search completed in " + str(round(time.time() - deltaTime, 2)) + " seconds, beginning comparison")
 
+    deltaTime = time.time()
+    # Now we process each url
     for url in urls:
+        # Optimze popular websites for text
         elementsToSearch = {}
         if "stackoverflow" in url:
             elementsToSearch = {"code"}
+        elif "gist.github.com" in url:
+            elementsToSearch = {"tbody", "tr"}
         else:
-            elementsToSearch = {"p", "code", "li"}
+            elementsToSearch = {"p", "code", "li", "b", "u", "i"}
         page = requests.get(url).text
         soup = BeautifulSoup(page, "lxml")
-        # toCompare = soup.get_text()
         toCompare = ""
+        # Search the DOM for certain elements, and extract that text
         for element in elementsToSearch:
             for node in soup.findAll(element):
                 toCompare += ''.join(node.findAll(text=True))
         toCompare = ' '.join(toCompare.split())
-        s = SequenceMatcher(None, text, toCompare)
+        # Compare ratios
+        s = SequenceMatcher(None, toRead, toCompare)
         sim = s.ratio() * 100
         if sim > bestMatch:
             bestMatch = sim
